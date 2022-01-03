@@ -45,7 +45,7 @@ job [[ template "job_name" . ]] {
         data = <<EOF
 defaults
    mode http
-frontend stats
+frontend ui_stats
    bind *:[[ .haproxy.ui_port ]]
    stats uri /
    stats show-legends
