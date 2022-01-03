@@ -35,6 +35,12 @@ variable "version" {
   default     = "2.4"
 }
 
+variable "address" {
+  description = "HAproxy custom address"
+  type        = string
+  default     = "127.0.0.1"
+}
+
 variable "http_port" {
   description = "The Nomad client port that routes to the HAProxy. This port will be where you visit your load balanced application"
   type        = number

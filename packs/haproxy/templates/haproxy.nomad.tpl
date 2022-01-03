@@ -50,7 +50,7 @@ job [[ template "job_name" . ]] {
       config {
         image = "prom/haproxy-exporter:latest"
 
-        args = ["--haproxy.scrape-uri", "http://127.0.0.1:[[.haproxy.ui_port]]/?stats;csv"]
+        args = ["--haproxy.scrape-uri", "http://[[.haproxy.address]]:[[.haproxy.ui_port]]/?stats;csv"]
 
         ports = ["haproxy_export"]
       }
@@ -143,7 +143,7 @@ global:
 scrape_configs:
   - job_name: haproxy_exporter
     static_configs:
-      - targets: [127.0.0.1:[[ .haproxy.export_port ]]]
+      - targets: [{{ range service "haproxy-exporter" }}'{{ .Address }}:{{ .Port }}',{{ end }}]
 EOH
 
         change_mode   = "signal"
