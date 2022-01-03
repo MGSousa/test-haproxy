@@ -22,6 +22,10 @@ job [[ template "job_name" . ]] {
       port "haproxy_export" {
         static = [[ .haproxy.export_port ]]
       }
+
+      port "prometheus_ui" {
+        static = 9090
+      }
     }
 
     service {
@@ -105,6 +109,63 @@ EOF
       resources {
         cpu    = [[ .haproxy.resources.cpu ]]
         memory = [[ .haproxy.resources.memory ]]
+      }
+    }
+
+    task "prometheus" {
+      driver = "docker"
+
+      config {
+        image = "prom/prometheus"
+
+        args = [
+          "--config.file=/etc/prometheus/config/prometheus.yml",
+          "--storage.tsdb.path=/prometheus",
+          "--web.console.libraries=/usr/share/prometheus/console_libraries",
+          "--web.console.templates=/usr/share/prometheus/consoles",
+        ]
+
+        network_mode = "host"
+
+        volumes = [
+          "local/config:/etc/prometheus/config",
+        ]
+
+        ports = ["prometheus_ui"]
+      }
+
+      template {
+        data = <<EOH
+---
+global:
+  scrape_interval:     5s
+  evaluation_interval: 5s
+scrape_configs:
+  - job_name: haproxy_exporter
+    static_configs:
+      - targets: [127.0.0.1:[[ .haproxy.export_port ]]]
+EOH
+
+        change_mode   = "signal"
+        change_signal = "SIGHUP"
+        destination   = "local/config/prometheus.yml"
+      }
+
+      resources {
+        cpu    = 100
+        memory = 512
+      }
+
+      service {
+        name = "prometheus"
+        port = "prometheus_ui"
+
+        check {
+          type     = "http"
+          path     = "/-/healthy"
+          interval = "10s"
+          timeout  = "2s"
+        }
       }
     }
   }
