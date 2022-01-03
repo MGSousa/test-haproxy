@@ -18,6 +18,10 @@ job [[ template "job_name" . ]] {
       port "haproxy_ui" {
         static = [[ .haproxy.ui_port ]]
       }
+
+      port "haproxy_export" {
+        static = [[ .haproxy.export_port ]]
+      }
     }
 
     service {
@@ -28,6 +32,40 @@ job [[ template "job_name" . ]] {
         port     = "http"
         interval = "10s"
         timeout  = "2s"
+      }
+    }
+
+    task "haproxy_prometheus" {
+      driver = "docker"
+
+      lifecycle {
+        hook    = "prestart"
+        sidecar = true
+      }
+
+      config {
+        image = "prom/haproxy-exporter:latest"
+
+        args = ["--haproxy.scrape-uri", "http://127.0.0.1:[[.haproxy.ui_port]]/?stats;csv"]
+
+        ports = ["haproxy_export"]
+      }
+
+      service {
+        name = "haproxy-exporter"
+        port = "haproxy_export"
+
+        check {
+          type     = "http"
+          path     = "/metrics"
+          interval = "10s"
+          timeout  = "2s"
+        }
+      }
+
+      resources {
+        cpu    = 100
+        memory = 32
       }
     }
 
@@ -45,16 +83,11 @@ job [[ template "job_name" . ]] {
         data = <<EOF
 defaults
    mode http
-frontend ui_stats
+frontend stats
    bind *:[[ .haproxy.ui_port ]]
    stats uri /
    stats show-legends
    no log
-listen stats
-  bind *:14567
-  stats enable
-  stats uri /stats
-  stats auth [[ .haproxy.auth.user ]]:[[ .haproxy.auth.pass ]]
 frontend http_front
    bind *:[[ .haproxy.http_port ]]
    default_backend http_back

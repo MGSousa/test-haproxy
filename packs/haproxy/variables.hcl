@@ -59,16 +59,10 @@ variable "pre_provisioned_slot_count" {
   default     = 10
 }
 
-variable "auth" {
-  description = "Stats module auth"
-  type = object({
-    user = string
-    pass = string
-  })
-  default = {
-    user = "admin",
-    pass = "admin"
-  }
+variable "export_port" {
+  description = "Stats export port"
+  type        = number
+  default     = 9101
 }
 
 variable "resources" {
