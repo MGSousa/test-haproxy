@@ -39,7 +39,7 @@ job [[ template "job_name" . ]] {
       }
     }
 
-    task "haproxy_prometheus" {
+    task "haproxy_exporter" {
       driver = "docker"
 
       lifecycle {
@@ -112,6 +112,7 @@ EOF
       }
     }
 
+    [[- if .haproxy.monitoring.enabled ]]
     task "prometheus" {
       driver = "docker"
 
@@ -124,7 +125,6 @@ EOF
           "--web.console.libraries=/usr/share/prometheus/console_libraries",
           "--web.console.templates=/usr/share/prometheus/consoles",
         ]
-
         network_mode = "host"
 
         volumes = [
@@ -168,5 +168,7 @@ EOH
         }
       }
     }
+    [[- end ]]
+
   }
 }

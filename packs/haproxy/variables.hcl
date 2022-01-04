@@ -82,3 +82,13 @@ variable "resources" {
     memory = 256
   }
 }
+
+variable "monitoring" {
+  description = "Time series configuration"
+  type = object({
+    enabled = bool
+  })
+  default = {
+    enabled = true
+  }
+}
