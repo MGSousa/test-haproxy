@@ -87,8 +87,14 @@ variable "monitoring" {
   description = "Time series configuration"
   type = object({
     enabled = bool
+    consul  = bool
+    cpu     = number
+    memory  = number
   })
   default = {
-    enabled = true
+    enabled = true,
+    consul  = true,
+    cpu     = 200,
+    memory  = 512
   }
 }

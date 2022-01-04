@@ -19,13 +19,15 @@ job [[ template "job_name" . ]] {
         static = [[ .haproxy.ui_port ]]
       }
 
-      port "haproxy_export" {
+      port "haproxy_exporter" {
         static = [[ .haproxy.export_port ]]
       }
 
+      [[- if .haproxy.monitoring.enabled ]]
       port "prometheus_ui" {
         static = 9090
       }
+      [[- end ]]
     }
 
     service {
@@ -52,12 +54,12 @@ job [[ template "job_name" . ]] {
 
         args = ["--haproxy.scrape-uri", "http://[[.haproxy.address]]:[[.haproxy.ui_port]]/?stats;csv"]
 
-        ports = ["haproxy_export"]
+        ports = ["haproxy_exporter"]
       }
 
       service {
         name = "haproxy-exporter"
-        port = "haproxy_export"
+        port = "haproxy_exporter"
 
         check {
           type     = "http"
@@ -145,17 +147,15 @@ scrape_configs:
     static_configs:
       - targets: [{{ range service "haproxy-exporter" }}'{{ .Address }}:{{ .Port }}',{{ end }}]
 EOH
-
-        change_mode   = "signal"
-        change_signal = "SIGHUP"
         destination   = "local/config/prometheus.yml"
       }
 
       resources {
-        cpu    = 100
-        memory = 512
+        cpu    = [[ .haproxy.monitoring.cpu ]]
+        memory = [[ .haproxy.monitoring.memory ]]
       }
 
+      [[- if .haproxy.monitoring.consul ]]
       service {
         name = "prometheus"
         port = "prometheus_ui"
@@ -167,6 +167,7 @@ EOH
           timeout  = "2s"
         }
       }
+      [[- end ]]
     }
     [[- end ]]
 
