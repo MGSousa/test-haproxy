@@ -93,13 +93,14 @@ frontend stats
    bind *:[[ .haproxy.ui_port ]]
    stats uri /
    stats show-legends
-   no log
 frontend http_front
    bind *:[[ .haproxy.http_port ]]
    default_backend http_back
+   option contstats
 backend http_back
     balance roundrobin
     server-template webapp [[ .haproxy.pre_provisioned_slot_count ]] _[[ .haproxy.consul_service_name ]]._tcp.service.consul resolvers consul resolve-opts allow-dup-ip resolve-prefer ipv4 check
+    option contstats
 resolvers consul
     nameserver consul 127.0.0.1:[[ .haproxy.consul_dns_port ]]
     accepted_payload_size 8192
@@ -140,8 +141,8 @@ EOF
         data = <<EOH
 ---
 global:
-  scrape_interval:     5s
-  evaluation_interval: 5s
+  scrape_interval:     1s
+  evaluation_interval: 1s
 scrape_configs:
   - job_name: haproxy_exporter
     static_configs:
