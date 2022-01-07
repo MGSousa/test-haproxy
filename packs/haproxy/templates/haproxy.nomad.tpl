@@ -70,8 +70,9 @@ job [[ template "job_name" . ]] {
       }
 
       resources {
-        cpu    = 100
-        memory = 32
+        cpu         = 100
+        memory      = 32
+        memory_max  = 64
       }
     }
 
@@ -85,6 +86,7 @@ job [[ template "job_name" . ]] {
         ]
       }
 
+      // TODO: add dataplane bin to system
       template {
         data = <<EOF
 defaults
@@ -105,13 +107,20 @@ resolvers consul
     nameserver consul 127.0.0.1:[[ .haproxy.consul_dns_port ]]
     accepted_payload_size 8192
     hold valid 5s
+[[- if .haproxy.dataplane.enabled ]]    
+userlist haproxy-dataplaneapi
+    user admin insecure-password admin
+program api
+   command /usr/bin/dataplaneapi --host [[ .haproxy.dataplane.host ]] --port [[ .haproxy.dataplane.port ]] --haproxy-bin /usr/local/sbin/haproxy --config-file /usr/local/etc/haproxy/haproxy.cfg --reload-cmd "kill -SIGUSR2 1" --reload-delay 5 --userlist haproxy-dataplaneapi
+   no option start-on-reload
+[[- end ]]
 EOF
         destination = "local/haproxy.cfg"
       }
 
       resources {
-        cpu    = [[ .haproxy.resources.cpu ]]
-        memory = [[ .haproxy.resources.memory ]]
+        cpu         = [[ .haproxy.resources.cpu ]]
+        memory      = [[ .haproxy.resources.memory ]]
       }
     }
 

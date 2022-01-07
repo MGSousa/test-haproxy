@@ -78,8 +78,8 @@ variable "resources" {
     memory = number
   })
   default = {
-    cpu    = 200,
-    memory = 256
+    cpu         = 200,
+    memory      = 256
   }
 }
 
@@ -92,9 +92,23 @@ variable "monitoring" {
     memory  = number
   })
   default = {
-    enabled = true,
-    consul  = true,
-    cpu     = 200,
-    memory  = 512
+    enabled     = true,
+    consul      = true,
+    cpu         = 200,
+    memory      = 512
+  }
+}
+
+variable "dataplane" {
+  description = "API Dataplane configuration"
+  type = object({
+    enabled = bool
+    host    = string
+    port    = string
+  })
+  default = {
+    enabled     = true,
+    host        = "0.0.0.0",
+    port        = "5555"
   }
 }
