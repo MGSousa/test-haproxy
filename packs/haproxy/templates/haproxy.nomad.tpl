@@ -19,11 +19,17 @@ job [[ template "job_name" . ]] {
         static = [[ .haproxy.ui_port ]]
       }
 
+      [[- if .haproxy.dataplane.enabled ]]
+      port "haproxy_dataplane" {
+        static = [[ .haproxy.dataplane.port ]]
+      }
+      [[- end ]]
+
+      [[- if .haproxy.monitoring.enabled ]]
       port "haproxy_exporter" {
         static = [[ .haproxy.export_port ]]
       }
-
-      [[- if .haproxy.monitoring.enabled ]]
+      
       port "prometheus_ui" {
         static = 9090
       }
@@ -41,6 +47,7 @@ job [[ template "job_name" . ]] {
       }
     }
 
+    [[- if .haproxy.monitoring.enabled ]]
     task "haproxy_exporter" {
       driver = "docker"
 
@@ -75,18 +82,18 @@ job [[ template "job_name" . ]] {
         memory_max  = 64
       }
     }
+    [[- end ]]
 
     task "haproxy" {
       driver = "docker"
       config {
-        image        = "haproxy:[[.haproxy.version]]"
+        image        = "haproxytech/haproxy-debian:[[.haproxy.version]]"
         network_mode = "host"
         volumes = [
           "local/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg",
         ]
       }
 
-      // TODO: add dataplane bin to system
       template {
         data = <<EOF
 defaults
@@ -102,16 +109,15 @@ frontend http_front
 backend http_back
     balance roundrobin
     server-template webapp [[ .haproxy.pre_provisioned_slot_count ]] _[[ .haproxy.consul_service_name ]]._tcp.service.consul resolvers consul resolve-opts allow-dup-ip resolve-prefer ipv4 check
-    option contstats
 resolvers consul
     nameserver consul 127.0.0.1:[[ .haproxy.consul_dns_port ]]
     accepted_payload_size 8192
     hold valid 5s
-[[- if .haproxy.dataplane.enabled ]]    
+[[- if .haproxy.dataplane.enabled ]]
 userlist haproxy-dataplaneapi
-    user admin insecure-password admin
+    user [[ .haproxy.dataplane.user ]] insecure-password [[ .haproxy.dataplane.pass ]]
 program api
-   command /usr/bin/dataplaneapi --host [[ .haproxy.dataplane.host ]] --port [[ .haproxy.dataplane.port ]] --haproxy-bin /usr/local/sbin/haproxy --config-file /usr/local/etc/haproxy/haproxy.cfg --reload-cmd "kill -SIGUSR2 1" --reload-delay 5 --userlist haproxy-dataplaneapi
+   command /usr/bin/dataplaneapi --host [[ .haproxy.dataplane.host ]] --port [[ .haproxy.dataplane.port ]] --haproxy-bin /usr/local/sbin/haproxy -c /usr/local/etc/haproxy/haproxy.cfg -r "kill -SIGUSR2 1" -d 5 -u haproxy-dataplaneapi
    no option start-on-reload
 [[- end ]]
 EOF

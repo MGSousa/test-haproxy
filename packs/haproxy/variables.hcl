@@ -108,6 +108,8 @@ variable "dataplane" {
   })
   default = {
     enabled     = true,
+    user        = "admin",
+    pass        = "admin",
     host        = "0.0.0.0",
     port        = "5555"
   }
