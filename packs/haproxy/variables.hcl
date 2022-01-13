@@ -23,12 +23,6 @@ variable "region" {
   default     = "global"
 }
 
-variable "consul_service_name" {
-  description = "The consul service you wish to load balance"
-  type        = string
-  default     = "webapp"
-}
-
 variable "version" {
   description = "The haproxy docker image version. For options, see: https://hub.docker.com/_/haproxy"
   type        = string
@@ -53,12 +47,6 @@ variable "ui_port" {
   default     = 1936
 }
 
-variable "consul_dns_port" {
-  description = "The consul DNS port"
-  type        = number
-  default     = 8600
-}
-
 variable "pre_provisioned_slot_count" {
   description = "Backend slots to pre-provision in HAProxy config"
   type        = number
@@ -80,6 +68,18 @@ variable "resources" {
   default = {
     cpu         = 200,
     memory      = 256
+  }
+}
+
+variable "consul" {
+  description = "The consul service you wish to load balance"
+  type = object({
+    host  = string
+    port  = number
+  })
+  default = {
+    host  = "127.0.0.1",
+    port  = 8600
   }
 }
 
