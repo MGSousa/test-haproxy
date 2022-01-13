@@ -90,7 +90,7 @@ job [[ template "job_name" . ]] {
         image        = "haproxytech/haproxy-debian:[[.haproxy.version]]"
         network_mode = "host"
         volumes = [
-          "local/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg",
+          "local:/usr/local/etc/haproxy",
         ]
       }
 
