@@ -102,14 +102,6 @@ frontend stats
    bind *:[[ .haproxy.ui_port ]]
    stats uri /
    stats show-legends
-frontend http_front
-   bind *:8082
-   default_backend http_back
-   option contstats
-backend http_back
-    balance roundrobin
-    server-template webapp [[ .haproxy.pre_provisioned_slot_count ]] _kk-service._tcp.service.consul resolvers consul resolve-opts allow-dup-ip resolve-prefer ipv4 check
-    option contstats
 resolvers consul
     nameserver consul [[ .haproxy.consul.host ]]:[[ .haproxy.consul.port ]]
     accepted_payload_size 8192
